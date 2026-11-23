@@ -28,6 +28,46 @@
 	        <hr>
 	{% endfor %}
 	{% endif %}
-</body>
+<form action="/search" method="GET">
+    <label>
+        From:
+        <input type="text" name="source"
+               placeholder="City or airport, e.g. JFK" required>
+    </label>
 
+    <label>
+        To:
+        <input type="text" name="destination"
+               placeholder="City or airport, e.g. BOS" required>
+    </label>
+
+    <label>
+        Departure date:
+        <input type="date" name="departure_date" required>
+    </label>
+
+    <label>
+        Trip type:
+        <select name="trip_type" id="trip_type">
+            <option value="one_way">One way</option>
+            <option value="round_trip">Round trip</option>
+        </select>
+    </label>
+
+    <label>
+        Return date:
+        <input type="date" name="return_date" id="return_date">
+    </label>
+
+    <button type="submit">Search flights</button>
+	<script>
+    const tripType = document.getElementById("trip_type");
+    const returnDate = document.getElementById("return_date");
+
+    tripType.addEventListener("change", function () {
+        returnDate.required = tripType.value === "round_trip";
+    });
+</script>
+</form>
+</body>
 </html>

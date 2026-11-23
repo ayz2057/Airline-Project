@@ -9,7 +9,7 @@ app = Flask(__name__)
 conn = pymysql.connect(host='localhost',
                        user='root',
                        password='',
-                       db='blog',
+                       db='IntroDBPart2Pro',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
 
@@ -17,6 +17,37 @@ conn = pymysql.connect(host='localhost',
 @app.route('/')
 def hello():
 	return render_template('index.html')
+@app.route('/search', methods=['GET'])
+def search():
+	source = request.args.get('source', '').strip()
+	destination = request.args.get('destination', '').strip()
+	departure_date = request.args.get('departure_date', '')
+	trip_type = request.args.get('trip_type', 'one_way')
+	return_date = request.args.get('return_date', '')
+	cursor = conn.cursor()
+	query = """
+		SELECT f.*
+		FROM Flight AS f
+		JOIN Airport AS src ON f.dept_airport_name = src.name
+		JOIN Airport AS dst ON f.arrival_airport_name = dst.name
+		WHERE (src.city = %s OR src.name = %s)
+		AND (dst.city = %s OR dst.name = %s)
+		AND DATE(f.dept_datetime) = %s
+		AND f.dept_datetime > NOW()
+		ORDER BY f.dept_datetime
+	"""
+	cursor.execute(query, (
+		source, source,
+		destination, destination,
+		departure_date
+	))
+	outbound_flights = cursor.fetchall()
+	cursor.close()
+	return render_template(
+		'search_results.html',
+		flights=outbound_flights
+	)
+
 
 #Define route for login
 @app.route('/login')
