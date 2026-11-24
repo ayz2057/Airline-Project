@@ -64,9 +64,15 @@ def staff_login():
 @app.route('/register')
 def register():
 	return render_template('register.html')
+@app.route('/register/customer')
+def customer_register():
+	return render_template('customer_register.html')
+@app.route('/register/staff')
+def staff_register():
+	return render_template('staff_register.html')
 
 #Authenticates the login
-@app.route('/CustAuth', methods=['GET', 'POST'])
+@app.route('/CustLoginAuth', methods=['GET', 'POST'])
 def CustAuth():
 	#grabs information from the forms
 	email = request.form['email']
@@ -91,7 +97,7 @@ def CustAuth():
 		#returns an error message to the html page
 		error = 'Invalid password or email'
 		return render_template('customer_login.html', error=error)
-@app.route('/StaffAuth', methods = ['POST'])
+@app.route('/StaffLoginAuth', methods = ['POST'])
 def StaffAuth():
 	#grabs information from the forms
 	username = request.form['username']
@@ -116,8 +122,83 @@ def StaffAuth():
 		#returns an error message to the html page
 		error = 'Invalid password or email'
 		return render_template('staff_login.html', error=error)
-#Authenticates the register
-@app.route('/registerAuth', methods=['GET', 'POST'])
+@app.route('/CustRegAuth', methods=['GET', 'POST'])
+def CustRegAuth():
+	#grabs information from the forms
+	email = request.form['email']
+	name = request.form['name']
+	password = request.form['password']
+	building_num = request.form['building_num']
+	street = request.form['street']
+	city = request.form['city']
+	state = request.form['state']
+	phone_num = request.form['phone_num']
+	passport_num = request.form['passport_num']
+	passport_exp = request.form['passport_exp']
+	passport_country = request.form['passport_country']
+	dob = request.form['dob']
+
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = 'SELECT * FROM Customer WHERE email = %s'
+	cursor.execute(query, (email))
+	#stores the results in a variable
+	data = cursor.fetchone()
+	#use fetchall() if you are expecting more than 1 data row
+	error = None
+	if(data):
+		#If the previous query returns data, then user exists
+		error = "This user already exists"
+		return render_template('customer_register.html', error = error)
+	else:
+		ins = 'INSERT INTO Customer VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s)'
+		cursor.execute(ins, (email, name, password, building_num, street, city, state, phone_num, passport_num, passport_exp, passport_country, dob))
+		conn.commit()
+		cursor.close()
+		return render_template('index.html')
+@app.route('/StaffRegAuth', methods=['POST'])
+def StaffRegAuth():
+    username = request.form['username']
+    airline_name = request.form['airline_name']
+    password = request.form['password']
+    first_name = request.form['first_name']
+    last_name = request.form['last_name']
+    dob = request.form['dob']
+    email = request.form['email']
+
+    cursor = conn.cursor()
+    query = 'SELECT * FROM Airline_Staff WHERE username = %s'
+    cursor.execute(query, (username,))
+    data = cursor.fetchone()
+
+    if data:
+        error = 'This username already exists'
+        cursor.close()
+        return render_template('staff_register.html', error=error)
+    else:
+        query = 'SELECT * FROM Airline WHERE name = %s'
+        cursor.execute(query, (airline_name,))
+        airline = cursor.fetchone()
+
+        if not airline:
+            cursor.close()
+            error = 'This airline does not exist'
+            return render_template('staff_register.html', error=error)
+
+        ins = '''
+            INSERT INTO Airline_Staff
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        '''
+        cursor.execute(ins, (
+            username, airline_name, password,
+            first_name, last_name, dob, email
+        ))
+        conn.commit()
+        cursor.close()
+        return render_template('index.html')
+"""#Authenticates the register
+@app.route('/RegisterAuth', methods=['GET', 'POST'])
 def registerAuth():
 	#grabs information from the forms
 	username = request.form['username']
@@ -141,8 +222,7 @@ def registerAuth():
 		cursor.execute(ins, (username, password))
 		conn.commit()
 		cursor.close()
-		return render_template('index.html')
-
+		return render_template('index.html')"""
 @app.route('/home')
 def home():
 	if 'username' not in session:
