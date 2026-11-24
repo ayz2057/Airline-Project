@@ -53,15 +53,46 @@ def search():
 @app.route('/login')
 def login():
 	return render_template('login.html')
+@app.route('/login/customer')
+def customer_login():
+	return render_template('customer_login.html')
 
+@app.route('/login/staff')
+def staff_login():
+	return render_template('staff_login.html')
 #Define route for register
 @app.route('/register')
 def register():
 	return render_template('register.html')
 
 #Authenticates the login
-@app.route('/loginAuth', methods=['GET', 'POST'])
-def loginAuth():
+@app.route('/CustAuth', methods=['GET', 'POST'])
+def CustAuth():
+	#grabs information from the forms
+	email = request.form['email']
+	password = request.form['password']
+
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = 'SELECT * FROM Customer WHERE email = %s and password = %s'
+	cursor.execute(query, (email, password))
+	#stores the results in a variable
+	data = cursor.fetchone()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	error = None
+	if(data):
+		#creates a session for the the user
+		#session is a built in
+		session['username'] = email
+		return redirect(url_for('home'))
+	else:
+		#returns an error message to the html page
+		error = 'Invalid password or email'
+		return render_template('customer_login.html', error=error)
+@app.route('/StaffAuth', methods = ['POST'])
+def StaffAuth():
 	#grabs information from the forms
 	username = request.form['username']
 	password = request.form['password']
@@ -69,7 +100,7 @@ def loginAuth():
 	#cursor used to send queries
 	cursor = conn.cursor()
 	#executes query
-	query = 'SELECT * FROM user WHERE username = %s and password = %s'
+	query = 'SELECT * FROM Airline_Staff WHERE username = %s and password = %s'
 	cursor.execute(query, (username, password))
 	#stores the results in a variable
 	data = cursor.fetchone()
@@ -83,9 +114,8 @@ def loginAuth():
 		return redirect(url_for('home'))
 	else:
 		#returns an error message to the html page
-		error = 'Invalid login or username'
-		return render_template('login.html', error=error)
-
+		error = 'Invalid password or email'
+		return render_template('staff_login.html', error=error)
 #Authenticates the register
 @app.route('/registerAuth', methods=['GET', 'POST'])
 def registerAuth():
@@ -115,8 +145,10 @@ def registerAuth():
 
 @app.route('/home')
 def home():
-    
-    username = session['username']
+	if 'username' not in session:
+		return redirect(url_for('login'))
+	return render_template('home.html', username = session['username'])
+	"""username = session['username']
     cursor = conn.cursor();
     query = 'SELECT ts, blog_post FROM blog WHERE username = %s ORDER BY ts DESC'
     cursor.execute(query, (username))
@@ -124,7 +156,7 @@ def home():
     for each in data1:
         print(each['blog_post'])
     cursor.close()
-    return render_template('home.html', username=username, posts=data1)
+    return render_template('home.html', username=username, posts=data1)"""
 
 		
 @app.route('/post', methods=['GET', 'POST'])
