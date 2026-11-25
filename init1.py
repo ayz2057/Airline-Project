@@ -35,17 +35,28 @@ def search():
 		AND DATE(f.dept_datetime) = %s
 		AND f.dept_datetime > NOW()
 		ORDER BY f.dept_datetime
-	"""
+	""" 
 	cursor.execute(query, (
 		source, source,
 		destination, destination,
 		departure_date
 	))
 	outbound_flights = cursor.fetchall()
+	if (trip_type == 'one_way'):
+		return_flights = []
+	else:
+		cursor.execute(query, (
+			destination, destination,
+			source, source,
+			return_date
+		))
+		return_flights = cursor.fetchall()
 	cursor.close()
 	return render_template(
 		'search_results.html',
-		flights=outbound_flights
+		outbound_flights = outbound_flights,
+		return_flights = return_flights,
+		trip_type = trip_type
 	)
 
 

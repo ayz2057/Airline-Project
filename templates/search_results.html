@@ -3,7 +3,7 @@
 <body>
 <h1>Flight results</h1>
 
-{% for flight in flights %}
+{% for flight in outbound_flights %}
     <p>
         {{ flight['operator_name'] }} {{ flight['flight_num'] }}:
         {{ flight['dept_airport_name'] }} to
@@ -14,7 +14,22 @@
 {% else %}
     <p>No matching flights.</p>
 {% endfor %}
-
+{% if trip_type == 'round_trip' %}
+    <h2>Return flights</h2>
+    {% for flight in return_flights %}
+        <p>
+            {{ flight['operator_name'] }} {{ flight['flight_num'] }}:
+            {{ flight['dept_airport_name'] }} to
+            {{ flight['arrival_airport_name'] }}.<br>
+            Departs: {{ flight['dept_datetime'] }}.<br>
+            Arrives: {{ flight['arr_datetime'] }}.<br>
+            Price: {{ flight['base_price'] }}.<br>
+            Status: {{ flight['status'] }}.
+        </p>
+    {% else %}
+        <p>No matching return flights.</p>
+    {% endfor %}
+{% endif %}
 <a href="/">Search again</a>
 </body>
 </html>
