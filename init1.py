@@ -81,7 +81,7 @@ def CustAuth():
 	#cursor used to send queries
 	cursor = conn.cursor()
 	#executes query
-	query = 'SELECT * FROM Customer WHERE email = %s and password = %s'
+	query = 'SELECT * FROM Customer WHERE email = %s and password = MD5(%s)'
 	cursor.execute(query, (email, password))
 	#stores the results in a variable
 	data = cursor.fetchone()
@@ -91,6 +91,7 @@ def CustAuth():
 	if(data):
 		#creates a session for the the user
 		#session is a built in
+		session['role'] = 'customer'
 		session['username'] = email
 		return redirect(url_for('home'))
 	else:
@@ -106,7 +107,7 @@ def StaffAuth():
 	#cursor used to send queries
 	cursor = conn.cursor()
 	#executes query
-	query = 'SELECT * FROM Airline_Staff WHERE username = %s and password = %s'
+	query = 'SELECT * FROM Airline_Staff WHERE username = %s and password = MD5(%s)'
 	cursor.execute(query, (username, password))
 	#stores the results in a variable
 	data = cursor.fetchone()
@@ -117,6 +118,7 @@ def StaffAuth():
 		#creates a session for the the user
 		#session is a built in
 		session['username'] = username
+		session['role'] = 'staff'
 		return redirect(url_for('home'))
 	else:
 		#returns an error message to the html page
@@ -152,7 +154,7 @@ def CustRegAuth():
 		error = "This user already exists"
 		return render_template('customer_register.html', error = error)
 	else:
-		ins = 'INSERT INTO Customer VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s)'
+		ins = 'INSERT INTO Customer VALUES(%s, %s, MD5(%s), %s, %s, %s, %s, %s,%s, %s, %s, %s)'
 		cursor.execute(ins, (email, name, password, building_num, street, city, state, phone_num, passport_num, passport_exp, passport_country, dob))
 		conn.commit()
 		cursor.close()
@@ -188,7 +190,7 @@ def StaffRegAuth():
 
         ins = '''
             INSERT INTO Airline_Staff
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, MD5(%s), %s, %s, %s, %s)
         '''
         cursor.execute(ins, (
             username, airline_name, password,
@@ -227,7 +229,11 @@ def registerAuth():
 def home():
 	if 'username' not in session:
 		return redirect(url_for('login'))
-	return render_template('home.html', username = session['username'])
+	if session['role'] == 'customer':
+		return render_template('customer_home.html', username = session['username'])
+	elif session['role'] == 'staff':
+		return render_template('staff_home.html', username = session['username'])
+	else: return redirect(url_for('login'))
 	"""username = session['username']
     cursor = conn.cursor();
     query = 'SELECT ts, blog_post FROM blog WHERE username = %s ORDER BY ts DESC'
